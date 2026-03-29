@@ -1,0 +1,214 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Alcohol Mixing Calculator</title> 
+    <style> 
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f2f5; 
+            color: #333; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 30px; 
+        } 
+        .container { 
+            width: 100%; 
+            max-width: 650px; 
+            background: #ffffff; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1); 
+            margin-bottom: 30px; 
+        } 
+        h2 { 
+            color: #1a73e8; 
+            border-bottom: 2px solid #e8f0fe; 
+            padding-bottom: 12px; 
+            margin-top: 0; 
+            font-size: 1.4em; 
+        } 
+        .input-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+        } 
+        .input-group { 
+            display: flex; 
+            flex-direction: column; 
+        } 
+        label { 
+            margin-bottom: 6px; 
+            font-weight: 600; 
+            font-size: 0.85em; 
+            color: #5f6368; 
+        } 
+        input { 
+            padding: 12px; 
+            border: 1px solid #dadce0; 
+            border-radius: 6px; 
+            font-size: 1em; 
+            transition: border-color 0.2s; 
+        } 
+        input:focus { 
+            outline: none; 
+            border-color: #1a73e8; 
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.2); 
+        } 
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            background-color: #1a73e8; 
+            color: white; 
+            font-size: 1em; 
+            margin-bottom: 20px; 
+            transition: background 0.2s; 
+        } 
+        button:hover { 
+            background-color: #1557b0; 
+        } 
+        .results { 
+            background-color: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #e8eaed; 
+        } 
+        .result-item { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 10px; 
+            padding-bottom: 10px; 
+            border-bottom: 1px solid #eee; 
+        } 
+        .result-item:last-child { 
+            border-bottom: none; 
+            margin-bottom: 0; 
+            padding-bottom: 0; 
+        } 
+        .val { 
+            font-weight: 700; 
+            color: #1a73e8; 
+            font-family: 'Courier New', Courier, monospace; 
+        } 
+        .highlight { 
+            color: #d93025; 
+            font-size: 1.2em; 
+        } 
+    </style> 
+</head> 
+<body> 
+
+    <div class="container"> 
+        <h2>1. Initial Water & Alcohol Required</h2> 
+        <div class="input-grid"> 
+            <div class="input-group"> 
+                <label>Target Concentration (C1) %</label> 
+                <input type="number" id="p1_c1" placeholder="e.g. 22" step="any"> 
+            </div> 
+            <div class="input-group"> 
+                <label>Target Total Volume (V1) L</label> 
+                <input type="number" id="p1_v1" placeholder="e.g. 20000" step="any"> 
+            </div> 
+            <div class="input-group" style="grid-column: span 2;"> 
+                <label>Stock Alcohol Concentration (C2) %</label> 
+                <input type="number" id="p1_c2" placeholder="e.g. 95.082" step="any" oninput="syncC2(this.value)"> 
+            </div> 
+        </div> 
+
+        <button onclick="calcPart1()">Calculate Required Mix</button> 
+
+        <div class="results"> 
+            <div class="result-item"><span>Alcohol Needed (V2) Litres:</span><span class="val" id="p1_v2_l">0.00</span></div> 
+            <div class="result-item"><span>Alcohol Needed (V2) Gallons:</span><span class="val" id="p1_v2_g">0.00</span></div> 
+            <div class="result-item"><span>R.O Water to be Pumped (L):</span><span class="val" id="p1_water">0.00</span></div> 
+        </div> 
+    </div> 
+
+    <div class="container"> 
+        <h2>2. Exact Volume & Remaining Water</h2> 
+        <div class="input-grid"> 
+            <div class="input-group"> 
+                <label>Alcolizer Reading (Mixed Conc.) %</label> 
+                <input type="number" id="p2_cmix" placeholder="Measured %" step="any"> 
+            </div> 
+            <div class="input-group"> 
+                <label>Water Already in Tank (L)</label> 
+                <input type="number" id="p2_wadd" placeholder="e.g. 15372" step="any"> 
+            </div> 
+            <div class="input-group"> 
+                <label>Stock Alcohol Conc. (C2) %</label> 
+                <input type="number" id="p2_c2" placeholder="Auto-synced" step="any"> 
+            </div> 
+            <div class="input-group"> 
+                <label>Final Target Conc. (C1) %</label> 
+                <input type="number" id="p2_c1" placeholder="e.g. 22" step="any"> 
+            </div> 
+        </div> 
+
+        <button onclick="calcPart2()">Calculate Final Correction</button> 
+
+        <div class="results"> 
+            <div class="result-item"><span>Exact Alcohol in Tank (L):</span><span class="val" id="p2_exact_alc">0.00</span></div> 
+            <div class="result-item"><span>New Total Batch Size (L):</span><span class="val" id="p2_total_batch">0.00</span></div> 
+            <div class="result-item"><span>Total Water Needed (L):</span><span class="val" id="p2_total_water">0.00</span></div> 
+            <div class="result-item" style="border-top: 2px solid #1a73e8; margin-top: 5px; padding-top: 15px;"> 
+                <span style="font-weight: bold;">REMAINING WATER TO ADD (L):</span> 
+                <span class="val highlight" id="p2_rem_water">0.00</span> 
+            </div> 
+        </div> 
+    </div> 
+
+    <script> 
+        const GAL_CONV = 3.785411784; 
+
+        // Automatically updates Part 2 when you type in Part 1 
+        function syncC2(val) { 
+            document.getElementById('p2_c2').value = val; 
+        } 
+
+        function calcPart1() { 
+            const c1 = parseFloat(document.getElementById('p1_c1').value); 
+            const v1 = parseFloat(document.getElementById('p1_v1').value); 
+            const c2 = parseFloat(document.getElementById('p1_c2').value); 
+
+            if (c1 && v1 && c2) { 
+                const v2 = (c1 * v1) / c2; 
+                const water = v1 - v2; 
+                document.getElementById('p1_v2_l').innerText = v2.toFixed(4); 
+                document.getElementById('p1_v2_g').innerText = (v2 / GAL_CONV).toFixed(4); 
+                document.getElementById('p1_water').innerText = water.toFixed(4); 
+            } else { 
+                alert("Please fill in all Part 1 values."); 
+            } 
+        } 
+
+        function calcPart2() { 
+            const cMix = parseFloat(document.getElementById('p2_cmix').value); 
+            const wAdd = parseFloat(document.getElementById('p2_wadd').value); 
+            const c2 = parseFloat(document.getElementById('p2_c2').value); 
+            const c1 = parseFloat(document.getElementById('p2_c1').value); 
+
+            if (cMix && wAdd && c2 && c1) { 
+                const exactAlc = (cMix * wAdd) / (c2 - cMix); 
+                const totalBatch = (exactAlc * c2) / c1; 
+                const totalWater = totalBatch - exactAlc; 
+                const remWater = totalWater - wAdd; 
+
+                document.getElementById('p2_exact_alc').innerText = exactAlc.toFixed(4); 
+                document.getElementById('p2_total_batch').innerText = totalBatch.toFixed(4); 
+                document.getElementById('p2_total_water').innerText = totalWater.toFixed(4); 
+                document.getElementById('p2_rem_water').innerText = remWater.toFixed(4); 
+            } else { 
+                alert("Please fill in all Part 2 values."); 
+            } 
+        } 
+    </script> 
+</body> 
+</html>
